@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Water Intake Tracker - ArogyaMitra</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="position-relative">
+
+    <div class="hero-bg-layer" style="background-image: linear-gradient(90deg, rgba(11, 19, 43, 0.9) 0%, rgba(11, 19, 43, 0.7) 100%), url('/images/family.png');"></div>
+    
+    <nav class="navbar navbar-dark py-3 position-relative z-2">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-glow fs-3" th:href="@{/dashboard}">
+                <i class="fa-solid fa-heart-pulse text-info me-2"></i>ArogyaMitra
+            </a>
+            <a th:href="@{/dashboard}" class="btn btn-outline-light rounded-pill btn-sm">
+                <i class="fa-solid fa-house me-1"></i> Dashboard
+            </a>
+        </div>
+    </nav>
+
+    <div class="container position-relative z-2 py-4">
+        <div class="row g-4">
+            
+            <!-- Left Side: Log Water Intake Form -->
+            <div class="col-md-5">
+                <div class="glass-form-card p-4 rounded-4 border-glow">
+                    <h3 class="text-white fw-bold mb-3">
+                        <i class="fa-solid fa-glass-water text-info me-2"></i>Log Water Intake
+                    </h3>
+                    
+                    <form th:action="@{/water/save}" th:object="${newWater}" method="post">
+                        
+                        <div class="mb-3">
+                            <label class="text-white fw-semibold">Family Member</label>
+                            <input type="text" th:field="*{memberName}" class="form-control glass-input text-white" placeholder="e.g., Father / Mother / Myself" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="text-white fw-semibold">Water Amount (in ml)</label>
+                            <div class="input-group">
+                                <input type="number" id="waterAmountInput" th:field="*{amountMl}" class="form-control glass-input text-white" placeholder="e.g., 250" min="50" step="50" required>
+                                <span class="input-group-text bg-secondary text-white border-0">ml</span>
+                            </div>
+                        </div>
+
+                        <!-- Quick Add Buttons -->
+                        <div class="mb-3">
+                            <label class="text-white small fw-semibold d-block mb-2">Quick Select:</label>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-info rounded-pill text-white" onclick="setWater(250)">
+                                    <i class="fa-solid fa-glass-water me-1"></i> 1 Glass (250ml)
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-info rounded-pill text-white" onclick="setWater(500)">
+                                    <i class="fa-solid fa-bottle-water me-1"></i> 1 Bottle (500ml)
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-info text-dark rounded-pill w-100 fw-bold py-2 mt-2">
+                            <i class="fa-solid fa-plus me-2"></i>Add Water Log
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Side: Progress & History -->
+            <div class="col-md-7">
+                <div class="glass-form-card p-4 rounded-4 border-glow mb-4">
+                    <h3 class="text-white fw-bold mb-3">
+                        <i class="fa-solid fa-chart-line text-warning me-2"></i>Daily Hydration Goal
+                    </h3>
+                    
+                    <!-- Progress Bar -->
+                    <div class="mb-2 d-flex justify-content-between text-white fw-semibold">
+                        <span>Progress (<span th:text="${totalMl}">0</span> / <span th:text="${dailyGoal}">3000</span> ml)</span>
+                        <span th:text="${percentage} + '%'">0%</span>
+                    </div>
+                    <div class="progress rounded-pill mb-3" style="height: 20px; background-color: rgba(255,255,255,0.2);">
+                        <div class="progress-bar bg-info progress-bar-striped progress-bar-animated" role="progressbar" 
+                             th:style="'width: ' + ${percentage} + '%;'" 
+                             th:aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+
+                <!-- Logs History List -->
+                <div class="glass-form-card p-4 rounded-4 border-glow">
+                    <h4 class="text-white fw-bold mb-3">
+                        <i class="fa-solid fa-clock-rotate-left text-info me-2"></i>Intake Logs
+                    </h4>
+                    
+                    <div th:if="${#lists.isEmpty(waterLogs)}" class="text-light opacity-75">
+                        No water intake logged for today yet.
+                    </div>
+
+                    <div class="row g-2" th:if="${!#lists.isEmpty(waterLogs)}">
+                        <div class="col-12" th:each="w : ${waterLogs}">
+                            <div class="p-3 rounded-3 bg-white bg-opacity-10 text-white border border-secondary d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1 text-info fw-bold fs-5">
+                                        <i class="fa-solid fa-user me-2 text-warning"></i><span th:text="${w.memberName}">Father</span>
+                                    </h6>
+                                    <div class="small opacity-90">
+                                        <i class="fa-solid fa-droplet text-primary me-1"></i>Consumed: <strong th:text="${w.amountMl} + ' ml'">250 ml</strong>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <a th:href="@{/water/delete/{id}(id=${w.id})}" class="btn btn-sm btn-outline-danger rounded-circle" title="Delete Log">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function setWater(amount) {
+            document.getElementById('waterAmountInput').value = amount;
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

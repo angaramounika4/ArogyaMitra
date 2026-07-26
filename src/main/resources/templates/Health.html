@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Health Records</title>
+</head>
+<body>
+
+<h2>Health Records</h2>
+
+<form action="/health" method="post">
+
+Blood Group:
+<input type="text" name="bloodGroup"><br><br>
+
+Blood Pressure:
+<input type="text" name="bloodPressure"><br><br>
+
+Sugar Level:
+<input type="text" name="sugarLevel"><br><br>
+
+Weight:
+<input type="number" step="0.1" name="weight"><br><br>
+
+Height:
+<input type="number" step="0.1" name="height"><br><br>
+
+<button type="submit">Save</button>
+
+</form>
+
+<p th:text="${message}"></p>
+
+<table border="1">
+<tr>
+<th>Blood Group</th>
+<th>Blood Pressure</th>
+<th>Sugar Level</th>
+<th>Weight</th>
+<th>Height</th>
+</tr>
+
+<tr th:each="r : ${records}">
+<td th:text="${r.bloodGroup}"></td>
+<td th:text="${r.bloodPressure}"></td>
+<td th:text="${r.sugarLevel}"></td>
+<td th:text="${r.weight}"></td>
+<td th:text="${r.height}"></td>
+</tr>
+
+</table>
+
+</body>
+</html>

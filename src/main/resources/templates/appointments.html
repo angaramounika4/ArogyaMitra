@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Hospital Appointments - ArogyaMitra</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .glass-select {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .glass-select option {
+            background-color: #0b132b;
+            color: white;
+        }
+    </style>
+</head>
+<body class="position-relative">
+
+    <div class="hero-bg-layer" style="background-image: linear-gradient(90deg, rgba(11, 19, 43, 0.9) 0%, rgba(11, 19, 43, 0.7) 100%), url('/images/family.png');"></div>
+    
+    <nav class="navbar navbar-dark py-3 position-relative z-2">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-glow fs-3" th:href="@{/dashboard}">
+                <i class="fa-solid fa-heart-pulse text-info me-2"></i>ArogyaMitra
+            </a>
+            <a th:href="@{/dashboard}" class="btn btn-outline-light rounded-pill btn-sm">
+                <i class="fa-solid fa-house me-1"></i> Dashboard
+            </a>
+        </div>
+    </nav>
+
+    <div class="container position-relative z-2 py-4">
+        <div class="row g-4">
+            
+            <!-- Left Side: Book Appointment -->
+            <div class="col-md-5">
+                <div class="glass-form-card p-4 rounded-4 border-glow">
+                    <h3 class="text-white fw-bold mb-3">
+                        <i class="fa-solid fa-hospital-user text-info me-2"></i>Book Appointment
+                    </h3>
+                    
+                    <form th:action="@{/appointments/save}" th:object="${newAppointment}" method="post" onsubmit="combineAddAppointmentTime()">
+                        
+                        <div class="mb-3">
+                            <label class="text-white fw-semibold">Hospital Name</label>
+                            <input type="text" th:field="*{hospitalName}" class="form-control glass-input text-white" placeholder="e.g., Apollo Hospital" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="text-white fw-semibold">Hospital Phone Number</label>
+                            <input type="tel" th:field="*{hospitalPhone}" class="form-control glass-input text-white" placeholder="e.g., 08812234567" pattern="[0-9]{10,11}" required>
+                        </div>
+
+                        <!-- 12-Hour Time Picker -->
+                        <div class="mb-3">
+                            <label class="text-white fw-semibold">Time to Reach Hospital (12-Hour Clock)</label>
+                            <input type="hidden" id="addAppTime" th:field="*{timeToReach}" />
+                            
+                            <div class="row g-2">
+                                <div class="col-4">
+                                    <select id="addAppHour" class="form-select glass-select text-white" required>
+                                        <option value="">Hour</option>
+                                        <option value="01">01</option><option value="02">02</option><option value="03">03</option>
+                                        <option value="04">04</option><option value="05">05</option><option value="06">06</option>
+                                        <option value="07">07</option><option value="08">08</option><option value="09">09</option>
+                                        <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+                                    </select>
+                                </div>
+                                <div class="col-4">
+                                    <select id="addAppMin" class="form-select glass-select text-white" required>
+                                        <option value="">Min</option>
+                                        <option value="00">00</option><option value="15">15</option>
+                                        <option value="30">30</option><option value="45">45</option>
+                                    </select>
+                                </div>
+                                <div class="col-4">
+                                    <select id="addAppAmpm" class="form-select glass-select text-white" required>
+                                        <option value="AM">AM</option>
+                                        <option value="PM">PM</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="text-white fw-semibold">Doctor Name (Optional)</label>
+                            <input type="text" th:field="*{doctorName}" class="form-control glass-input text-white" placeholder="e.g., Dr. Ramesh">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="text-white fw-semibold">Patient Name</label>
+                            <input type="text" th:field="*{memberName}" class="form-control glass-input text-white" placeholder="e.g., Father / Mother" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-glow rounded-pill w-100 fw-bold py-2 mt-2">
+                            <i class="fa-solid fa-calendar-check me-2"></i>Save Appointment
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Side: Scheduled Appointments -->
+            <div class="col-md-7">
+                <div class="glass-form-card p-4 rounded-4 border-glow">
+                    <h3 class="text-white fw-bold mb-3">
+                        <i class="fa-solid fa-notes-medical text-warning me-2"></i>Scheduled Appointments
+                    </h3>
+                    
+                    <div th:if="${#lists.isEmpty(appointments)}" class="text-light opacity-75">
+                        No hospital appointments scheduled yet.
+                    </div>
+
+                    <div class="row g-3" th:if="${!#lists.isEmpty(appointments)}">
+                        <div class="col-12" th:each="a : ${appointments}">
+                            <div class="p-3 rounded-3 bg-white bg-opacity-10 text-white border border-secondary d-flex justify-content-between align-items-center">
+                                
+                                <div>
+                                    <h5 class="mb-1 text-info fw-bold fs-5">
+                                        <i class="fa-solid fa-square-h text-danger me-2"></i><span th:text="${a.hospitalName}">Apollo Hospital</span>
+                                    </h5>
+                                    
+                                    <div class="small opacity-90 mb-1">
+                                        <span class="badge bg-warning text-dark fs-6 me-2">
+                                            <i class="fa-regular fa-clock me-1"></i>Reach By: <span th:text="${a.timeToReach}">10:30 AM</span>
+                                        </span>
+                                        <span><i class="fa-solid fa-phone text-success me-1"></i>Hospital Ph: <strong th:text="${a.hospitalPhone}">08812234567</strong></span>
+                                    </div>
+
+                                    <div class="small opacity-90">
+                                        <span class="me-3" th:if="${a.doctorName != null and !a.doctorName.empty}">
+                                            <i class="fa-solid fa-user-doctor text-warning me-1"></i>Doctor: <strong th:text="${a.doctorName}">Dr. Ramesh</strong> | 
+                                        </span>
+                                        <span><i class="fa-solid fa-user text-info me-1"></i>Patient: <strong th:text="${a.memberName}">Father</strong></span>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-warning rounded-circle" data-bs-toggle="modal" th:data-bs-target="'#editAppointmentModal-' + ${a.id}">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+
+                                    <a th:href="@{/appointments/delete/{id}(id=${a.id})}" class="btn btn-sm btn-outline-danger rounded-circle">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </a>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Edit Appointment Modals -->
+    <div th:each="a : ${appointments}">
+        <div class="modal fade" th:id="'editAppointmentModal-' + ${a.id}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content glass-form-card border-glow text-white" style="background-color: #0b132b; border: 1px solid rgba(255,255,255,0.2);">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title text-warning fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Appointment</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form th:action="@{/appointments/save}" method="post" th:onsubmit="'combineEditAppointmentTime(' + ${a.id} + ')'">
+                        <div class="modal-body">
+                            <input type="hidden" name="id" th:value="${a.id}" />
+
+                            <div class="mb-3">
+                                <label class="form-label text-white">Hospital Name</label>
+                                <input type="text" name="hospitalName" th:value="${a.hospitalName}" class="form-control glass-input text-white" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-white">Hospital Phone Number</label>
+                                <input type="tel" name="hospitalPhone" th:value="${a.hospitalPhone}" class="form-control glass-input text-white" required>
+                            </div>
+
+                            <!-- Edit Time 12-Hour Dropdown -->
+                            <div class="mb-3">
+                                <label class="form-label text-white">Time to Reach Hospital (12-Hour Clock)</label>
+                                <input type="hidden" th:id="'editAppTime-' + ${a.id}" name="timeToReach" th:value="${a.timeToReach}" />
+                                <div class="row g-2">
+                                    <div class="col-4">
+                                        <select th:id="'editAppHour-' + ${a.id}" class="form-select glass-select text-white" required>
+                                            <option value="01">01</option><option value="02">02</option><option value="03">03</option>
+                                            <option value="04">04</option><option value="05">05</option><option value="06">06</option>
+                                            <option value="07">07</option><option value="08">08</option><option value="09">09</option>
+                                            <option value="10">10</option><option value="11">11</option><option value="12" selected>12</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-4">
+                                        <select th:id="'editAppMin-' + ${a.id}" class="form-select glass-select text-white" required>
+                                            <option value="00">00</option><option value="15">15</option>
+                                            <option value="30">30</option><option value="45">45</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-4">
+                                        <select th:id="'editAppAmpm-' + ${a.id}" class="form-select glass-select text-white" required>
+                                            <option value="AM">AM</option>
+                                            <option value="PM">PM</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-white">Doctor Name</label>
+                                <input type="text" name="doctorName" th:value="${a.doctorName}" class="form-control glass-input text-white">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-white">Patient Name</label>
+                                <input type="text" name="memberName" th:value="${a.memberName}" class="form-control glass-input text-white" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-secondary">
+                            <button type="button" class="btn btn-outline-light rounded-pill btn-sm" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-warning rounded-pill btn-sm fw-bold px-3">Update Appointment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript to combine 12-hour values before form submit -->
+    <script>
+        function combineAddAppointmentTime() {
+            let h = document.getElementById("addAppHour").value;
+            let m = document.getElementById("addAppMin").value;
+            let ampm = document.getElementById("addAppAmpm").value;
+            document.getElementById("addAppTime").value = h + ":" + m + " " + ampm;
+        }
+
+        function combineEditAppointmentTime(id) {
+            let h = document.getElementById("editAppHour-" + id).value;
+            let m = document.getElementById("editAppMin-" + id).value;
+            let ampm = document.getElementById("editAppAmpm-" + id).value;
+            document.getElementById("editAppTime-" + id).value = h + ":" + m + " " + ampm;
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

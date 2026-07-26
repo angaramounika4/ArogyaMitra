@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Family Members</title>
+</head>
+<body>
+
+<h2>Family Members</h2>
+
+<form action="/family" method="post">
+
+    Name:
+    <input type="text" name="name"><br><br>
+
+    Relation:
+    <input type="text" name="relation"><br><br>
+
+    Age:
+    <input type="number" name="age"><br><br>
+
+    Blood Group:
+    <input type="text" name="bloodGroup"><br><br>
+
+    <button type="submit">Add Member</button>
+
+</form>
+
+<p th:text="${message}"></p>
+
+<table border="1">
+    <tr>
+        <th>Name</th>
+        <th>Relation</th>
+        <th>Age</th>
+        <th>Blood Group</th>
+    </tr>
+
+    <tr th:each="member : ${members}">
+        <td th:text="${member.name}"></td>
+        <td th:text="${member.relation}"></td>
+        <td th:text="${member.age}"></td>
+        <td th:text="${member.bloodGroup}"></td>
+    </tr>
+
+</table>
+
+</body>
+</html>

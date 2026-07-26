@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Medicine Reminders - ArogyaMitra</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .glass-select {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .glass-select option {
+            background-color: #0b132b;
+            color: white;
+        }
+    </style>
+</head>
+<body class="position-relative">
+
+    <div class="hero-bg-layer" style="background-image: linear-gradient(90deg, rgba(11, 19, 43, 0.9) 0%, rgba(11, 19, 43, 0.7) 100%), url('/images/family.png');"></div>
+    
+    <nav class="navbar navbar-dark py-3 position-relative z-2">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-glow fs-3" th:href="@{/dashboard}">
+                <i class="fa-solid fa-heart-pulse text-info me-2"></i>ArogyaMitra
+            </a>
+            <a th:href="@{/dashboard}" class="btn btn-outline-light rounded-pill btn-sm">
+                <i class="fa-solid fa-house me-1"></i> Dashboard
+            </a>
+        </div>
+    </nav>
+
+    <div class="container position-relative z-2 py-4">
+        <div class="row g-4">
+            
+            <!-- Left Side: Add Medicine Form -->
+            <div class="col-md-5">
+                <div class="glass-form-card p-4 rounded-4 border-glow">
+                    <h3 class="text-white fw-bold mb-3">
+                        <i class="fa-solid fa-pills text-info me-2"></i>Add Medicine Reminder
+                    </h3>
+                    
+                    <form th:action="@{/reminders/save}" th:object="${newMedicine}" method="post" onsubmit="combineAddMedicineTime()">
+                        
+                        <div class="mb-3">
+                            <label class="text-white fw-semibold">Medicine Name</label>
+                            <input type="text" th:field="*{medicineName}" class="form-control glass-input text-white" placeholder="e.g., Paracetamol 650" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="text-white fw-semibold">Dosage</label>
+                            <input type="text" th:field="*{dosage}" class="form-control glass-input text-white" placeholder="e.g., 1 Tablet / 5ml" required>
+                        </div>
+
+                        <!-- 12-Hour Dropdown Time Picker -->
+                        <div class="mb-3">
+                            <label class="text-white fw-semibold">Exact Time (12-Hour Clock)</label>
+                            <!-- Hidden input to store combined time -->
+                            <input type="hidden" id="addReminderTime" th:field="*{reminderTime}" />
+                            
+                            <div class="row g-2">
+                                <div class="col-4">
+                                    <select id="addHour" class="form-select glass-select text-white" required>
+                                        <option value="">Hour</option>
+                                        <option value="01">01</option><option value="02">02</option><option value="03">03</option>
+                                        <option value="04">04</option><option value="05">05</option><option value="06">06</option>
+                                        <option value="07">07</option><option value="08">08</option><option value="09">09</option>
+                                        <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+                                    </select>
+                                </div>
+                                <div class="col-4">
+                                    <select id="addMin" class="form-select glass-select text-white" required>
+                                        <option value="">Min</option>
+                                        <option value="00">00</option><option value="15">15</option>
+                                        <option value="30">30</option><option value="45">45</option>
+                                    </select>
+                                </div>
+                                <div class="col-4">
+                                    <select id="addAmpm" class="form-select glass-select text-white" required>
+                                        <option value="AM">AM</option>
+                                        <option value="PM">PM</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="text-white fw-semibold">Family Member</label>
+                            <input type="text" th:field="*{memberName}" class="form-control glass-input text-white" placeholder="e.g., Mother / Father" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="text-white fw-semibold">Patient Phone Number</label>
+                            <input type="tel" th:field="*{phoneNumber}" class="form-control glass-input text-white" placeholder="e.g., 9876543210" pattern="[0-9]{10}" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-glow rounded-pill w-100 fw-bold py-2 mt-2">
+                            <i class="fa-solid fa-bell me-2"></i>Set Reminder
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Side: Scheduled Reminders -->
+            <div class="col-md-7">
+                <div class="glass-form-card p-4 rounded-4 border-glow">
+                    <h3 class="text-white fw-bold mb-3">
+                        <i class="fa-solid fa-clock text-warning me-2"></i>Scheduled Reminders
+                    </h3>
+                    
+                    <div th:if="${#lists.isEmpty(medicines)}" class="text-light opacity-75">
+                        No medicine reminders scheduled yet.
+                    </div>
+
+                    <div class="row g-3" th:if="${!#lists.isEmpty(medicines)}">
+                        <div class="col-12" th:each="m : ${medicines}">
+                            <div class="p-3 rounded-3 bg-white bg-opacity-10 text-white border border-secondary d-flex justify-content-between align-items-center">
+                                
+                                <div>
+                                    <h5 class="mb-1 text-info fw-bold fs-5" th:text="${m.medicineName}">Paracetamol</h5>
+                                    
+                                    <div class="small opacity-90 mb-1">
+                                        <span class="badge bg-warning text-dark fs-6 me-2">
+                                            <i class="fa-regular fa-clock me-1"></i><span th:text="${m.reminderTime}">08:00 AM</span>
+                                        </span>
+                                        <span><i class="fa-solid fa-capsules text-danger me-1"></i>Dose: <strong th:text="${m.dosage}">1 Tablet</strong></span>
+                                    </div>
+
+                                    <div class="small opacity-90">
+                                        <span class="me-3"><i class="fa-solid fa-user text-success me-1"></i>For: <strong th:text="${m.memberName}">Mother</strong></span>
+                                        <span><i class="fa-solid fa-phone text-info me-1"></i>Contact: <strong th:text="${m.phoneNumber}">9876543210</strong></span>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-warning rounded-circle" data-bs-toggle="modal" th:data-bs-target="'#editMedicineModal-' + ${m.id}">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+
+                                    <a th:href="@{/reminders/delete/{id}(id=${m.id})}" class="btn btn-sm btn-outline-danger rounded-circle">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </a>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Edit Modals -->
+    <div th:each="m : ${medicines}">
+        <div class="modal fade" th:id="'editMedicineModal-' + ${m.id}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content glass-form-card border-glow text-white" style="background-color: #0b132b; border: 1px solid rgba(255,255,255,0.2);">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title text-warning fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Medicine Reminder</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form th:action="@{/reminders/save}" method="post" th:onsubmit="'combineEditMedicineTime(' + ${m.id} + ')'">
+                        <div class="modal-body">
+                            <input type="hidden" name="id" th:value="${m.id}" />
+
+                            <div class="mb-3">
+                                <label class="form-label text-white">Medicine Name</label>
+                                <input type="text" name="medicineName" th:value="${m.medicineName}" class="form-control glass-input text-white" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label text-white">Dosage</label>
+                                <input type="text" name="dosage" th:value="${m.dosage}" class="form-control glass-input text-white" required>
+                            </div>
+
+                            <!-- Edit Time 12-Hour Dropdown -->
+                            <div class="mb-3">
+                                <label class="form-label text-white">Exact Time (12-Hour Clock)</label>
+                                <input type="hidden" th:id="'editReminderTime-' + ${m.id}" name="reminderTime" th:value="${m.reminderTime}" />
+                                <div class="row g-2">
+                                    <div class="col-4">
+                                        <select th:id="'editHour-' + ${m.id}" class="form-select glass-select text-white" required>
+                                            <option value="01">01</option><option value="02">02</option><option value="03">03</option>
+                                            <option value="04">04</option><option value="05">05</option><option value="06">06</option>
+                                            <option value="07">07</option><option value="08">08</option><option value="09">09</option>
+                                            <option value="10">10</option><option value="11">11</option><option value="12" selected>12</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-4">
+                                        <select th:id="'editMin-' + ${m.id}" class="form-select glass-select text-white" required>
+                                            <option value="00">00</option><option value="15">15</option>
+                                            <option value="30">30</option><option value="45">45</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-4">
+                                        <select th:id="'editAmpm-' + ${m.id}" class="form-select glass-select text-white" required>
+                                            <option value="AM">AM</option>
+                                            <option value="PM">PM</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-white">Family Member</label>
+                                <input type="text" name="memberName" th:value="${m.memberName}" class="form-control glass-input text-white" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-white">Patient Phone Number</label>
+                                <input type="tel" name="phoneNumber" th:value="${m.phoneNumber}" class="form-control glass-input text-white" pattern="[0-9]{10}" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-secondary">
+                            <button type="button" class="btn btn-outline-light rounded-pill btn-sm" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-warning rounded-pill btn-sm fw-bold px-3">Update Reminder</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript to combine 12-hour values before form submit -->
+    <script>
+        function combineAddMedicineTime() {
+            let h = document.getElementById("addHour").value;
+            let m = document.getElementById("addMin").value;
+            let ampm = document.getElementById("addAmpm").value;
+            document.getElementById("addReminderTime").value = h + ":" + m + " " + ampm;
+        }
+
+        function combineEditMedicineTime(id) {
+            let h = document.getElementById("editHour-" + id).value;
+            let m = document.getElementById("editMin-" + id).value;
+            let ampm = document.getElementById("editAmpm-" + id).value;
+            document.getElementById("editReminderTime-" + id).value = h + ":" + m + " " + ampm;
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
